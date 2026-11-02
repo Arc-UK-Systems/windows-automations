@@ -27,6 +27,11 @@
                                                    point a pilot device at 'develop'
                                                    to test a revision before merging
 
+    Version : 1.5  -  02/11/2026  (the repo moved to the Arc-UK-Systems organisation and was
+              renamed windows-automations, so $RepoRawBase points at the new path. GitHub
+              redirects the old URL, so a component still carrying the 1.4 paste keeps
+              working - but re-paste this stub to stop depending on that redirect)
+
     Version : 1.4  -  18/08/2026  (fixed a confirmed production bug:
               $LASTEXITCODE does not reliably propagate across the & $Local invocation
               in Datto's actual execution environment, so a genuinely successful run
@@ -46,7 +51,7 @@ $ProgressPreference    = 'SilentlyContinue'
 # to SSL3/TLS1.0, which raw.githubusercontent.com rejects) - same fix as gpo/Apply-Baseline.ps1.
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 
-$RepoRawBase   = 'https://raw.githubusercontent.com/Arc-hub-tech/Automations'
+$RepoRawBase   = 'https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations'
 $ScriptRelPath = 'datto-capacity-sampler/Get-ArcCapacityScreen.ps1'
 
 $Branch = [Environment]::GetEnvironmentVariable('usrBranch')

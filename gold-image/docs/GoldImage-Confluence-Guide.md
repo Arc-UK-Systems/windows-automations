@@ -52,7 +52,7 @@
 Open PowerShell as Administrator on the template VM and paste this as a single line. It saves the script next to the logs and runs it. Change both filenames for the template you're building.
 
 ```
-$p="$env:SystemDrive\ArcLogs\GoldImagePrep\Prep-W11-VDI-GoldenImage.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/gold-image/Prep-W11-VDI-GoldenImage.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p
+$p="$env:SystemDrive\ArcLogs\GoldImagePrep\Prep-W11-VDI-GoldenImage.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/gold-image/Prep-W11-VDI-GoldenImage.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p
 ```
 
 Use this download-then-run form, not `irm | iex`. The automatic reboot needs a script file on disk to resume from; a piped run warns that it can't resume, and you then reboot by hand and run the saved script with `-Resume`.
@@ -253,7 +253,7 @@ When you move to a new Windows build, check the answer file with Windows System 
 
 | Item | Location |
 |---|---|
-| Scripts | `gold-image/` in the Arc-hub-tech/Automations repository on GitHub, main branch |
+| Scripts | `gold-image/` in the Arc-UK-Systems/windows-automations repository on GitHub, main branch |
 | Change history | `gold-image/CHANGELOG.md` |
 | Branching, release process and WSIM steps | `gold-image/README.md` |
 | This guide's source | `gold-image/docs/GoldImage-Confluence-Guide.md` |

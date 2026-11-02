@@ -6,6 +6,9 @@ All notable changes to `ArcHyperVCluster.ps1` (originally `Add-ArcHyperVClusterN
 
 _Work in progress on the `develop` branch. `$ScriptVersion` is `0.4.1-dev`; the download one-liner points at `/develop/`._
 
+### Changed
+- **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** The `/develop/` one-liners and fetch URLs now point at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/...`. GitHub redirects the old `Arc-hub-tech/Automations` URLs, so anything saved elsewhere keeps working, but it now depends on that redirect - use the new URL. The same change went to `main` as v1.7.1 / v0.2.2 / v1.0.1.
+
 ### Fixed (0.4.1-dev, lessons from the standalone script's lab run)
 The standalone Hyper-V scripts' baseline was lifted from this one, and a lab run on WS2025 found two bugs that are also here:
 - **The management firewall rules were only opened when Baseline turned a firewall profile on.** A fresh install already has the firewall on, so the rule groups were never opened: Remote Desktop, file sharing and WMI stayed blocked. The rule groups (Failover Clusters, Hyper-V, WinRM, file sharing, WMI, Remote Desktop) are now a baseline item of their own (`Sec.FirewallRules`). The fingerprint check stays self-contained, because it also runs on peer nodes over WinRM; the group list is passed in as a parameter.

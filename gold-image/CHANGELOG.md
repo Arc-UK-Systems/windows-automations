@@ -7,6 +7,7 @@ All notable changes to `Prep-W11-VDI-GoldenImage.ps1`, `Prep-WS2025-RDSH-Templat
 _Work in progress on the `develop` branch. `$ScriptVersion` is `1.8.0-dev` here; the download one-liners point at `/develop/`. On the v1.8 release cut these revert to `/main/` and `$ScriptVersion` drops to `1.8`._
 
 ### Changed
+- **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** The `/develop/` one-liners and fetch URLs now point at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/...`. GitHub redirects the old `Arc-hub-tech/Automations` URLs, so anything saved elsewhere keeps working, but it now depends on that redirect - use the new URL. The same change went to `main` as v1.7.1 / v0.2.2 / v1.0.1.
 - **Script header help brought up to date with v1.7 (all three scripts).** The comment-based headers still described the pre-v1.4 flow ("reboot, verify, then sysprep", "a reboot is required after this script", stage 2 resuming "at your next logon"). The step lists also covered only part of what each script does: W11 listed 7 of its steps and left out FSLogix, BitLocker, hardening, tuning and the answer file. The headers now give:
   - the full stage-1 step list in run order, plus stage 2 (WebRTC redirector on W11 and RDSH, appx re-sweep, BitLocker check, Sentinel reminder, sysprep prompt);
   - the automatic reboot and auto-logon into stage 2;

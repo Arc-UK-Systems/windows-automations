@@ -14,7 +14,7 @@
     (multi-line paste breaks in the console) - it saves the script next
     to the logs under C:\ArcLogs\GoldImagePrep, then runs it:
 
-       $p="$env:SystemDrive\ArcLogs\GoldImagePrep\Prep-WS2025-Server-Template.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/develop/gold-image/Prep-WS2025-Server-Template.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p
+       $p="$env:SystemDrive\ArcLogs\GoldImagePrep\Prep-WS2025-Server-Template.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/gold-image/Prep-WS2025-Server-Template.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p
 
     Why download-then-run (not `irm | iex`): this is a two-stage build.
     Stage 1 installs/configures, sets a one-shot auto-logon, then REBOOTS

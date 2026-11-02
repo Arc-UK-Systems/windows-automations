@@ -66,7 +66,7 @@ $ProgressPreference    = 'SilentlyContinue'
 
 # GitHub raw base for remote fetches. The org/repo matches the gold-image
 # one-liners; -Branch selects develop (WIP) vs main (production).
-$RepoRawBase = 'https://raw.githubusercontent.com/Arc-hub-tech/Automations'
+$RepoRawBase = 'https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations'
 
 # Microsoft LGPO.zip (Security Compliance Toolkit). If Microsoft moves this,
 # update the URL or stage LGPO.exe manually - see gpo/tools/LGPO/README.md.

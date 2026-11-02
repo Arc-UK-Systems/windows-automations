@@ -4,7 +4,10 @@ All notable changes to `ArcHyperVHost-Workshop.ps1`, `ArcHyperVHost-Site.ps1` an
 
 ## [Unreleased]
 
-_Work in progress on the `develop` branch. `$ScriptVersion` is `0.2.2-dev`; the download one-liners point at `/develop/`. Nothing yet since v0.2.1._
+_Work in progress on the `develop` branch. `$ScriptVersion` is `0.2.3-dev`; the download one-liners point at `/develop/`. (v0.2.2 on `main` is the repository move, below.)_
+
+### Changed
+- **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** The `/develop/` one-liners and fetch URLs now point at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/...`. GitHub redirects the old `Arc-hub-tech/Automations` URLs, so anything saved elsewhere keeps working, but it now depends on that redirect - use the new URL. The same change went to `main` as v1.7.1 / v0.2.2 / v1.0.1.
 
 ## [v0.2.1] - 2026-10-12
 

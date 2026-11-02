@@ -18,11 +18,11 @@
     Option B - pull and run the current develop-branch version directly
     (no clone needed; review the script on GitHub first if unsure):
 
-       irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/develop/windows-debloat/Debloat-Windows.ps1 | iex
+       irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/windows-debloat/Debloat-Windows.ps1 | iex
 
     To pass the choices with Option B (irm | iex can't take parameters):
 
-       & ([scriptblock]::Create((irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/develop/windows-debloat/Debloat-Windows.ps1))) -NewOutlook Block -Copilot Keep
+       & ([scriptblock]::Create((irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/windows-debloat/Debloat-Windows.ps1))) -NewOutlook Block -Copilot Keep
 ================================================================
 
 .SYNOPSIS
@@ -89,7 +89,7 @@
 # PowerShell then rejects the empty value against the set and aborts the run.
 param([string]$NewOutlook, [string]$Copilot, [string]$Norton)
 
-$ScriptVersion = '1.0.0-dev'
+$ScriptVersion = '1.0.2-dev'
 $ErrorActionPreference = 'Stop'
 $ProgressPreference    = 'SilentlyContinue'   # Invoke-WebRequest/installers are dramatically faster with the progress UI off
 

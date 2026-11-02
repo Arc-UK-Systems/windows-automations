@@ -39,7 +39,7 @@
 Open PowerShell as Administrator and run:
 
 ```
-irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/windows-debloat/Debloat-Windows.ps1 | iex
+irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/windows-debloat/Debloat-Windows.ps1 | iex
 ```
 
 The script asks its questions at the start (see below), then works through the five steps.
@@ -47,7 +47,7 @@ The script asks its questions at the start (see below), then works through the f
 To give the answers up front, for example from Datto RMM or to save typing, use this form instead. A plain `irm | iex` can't pass answers.
 
 ```
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/windows-debloat/Debloat-Windows.ps1))) -NewOutlook Block -Copilot Keep -Norton Keep
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/windows-debloat/Debloat-Windows.ps1))) -NewOutlook Block -Copilot Keep -Norton Keep
 ```
 
 With a local copy of the script:
@@ -191,7 +191,7 @@ Windows.old can't be restored once it's deleted.
 
 | Item | Location |
 |---|---|
-| Script | `windows-debloat/Debloat-Windows.ps1` in the Arc-hub-tech/Automations repository on GitHub, main branch |
+| Script | `windows-debloat/Debloat-Windows.ps1` in the Arc-UK-Systems/windows-automations repository on GitHub, main branch |
 | Change history | `windows-debloat/CHANGELOG.md` |
 | This guide's source | `windows-debloat/docs/Debloat-Windows-Confluence-Guide.md` |
 | Microsoft guidance on new Outlook | "Control installing and using new Outlook" on Microsoft Learn |

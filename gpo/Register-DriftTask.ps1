@@ -54,7 +54,7 @@ Write-Host ("Register-DriftTask.ps1  v{0}" -f $ScriptVersion) -ForegroundColor C
 # The command the task runs each tick: download-then-run Apply-Baseline.ps1 from
 # the chosen branch, then invoke it. Single-quoted here so $env:/vars resolve on
 # the TARGET at run time, not now. -NonInteractive so it never blocks on a prompt.
-$applyUrl = "https://raw.githubusercontent.com/Arc-hub-tech/Automations/$Branch/gpo/Apply-Baseline.ps1"
+$applyUrl = "https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/$Branch/gpo/Apply-Baseline.ps1"
 $inner = @"
 `$ErrorActionPreference='Stop';
 [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;

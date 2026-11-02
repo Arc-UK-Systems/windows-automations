@@ -37,6 +37,9 @@ _Work in progress on the `develop` branch._
     everywhere, so filter on `!= 00` **and** not blank, or wait one cycle.
   - CSV export gains `ReduceVcpu`.
 
+### Changed
+- **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** `$RepoRawBase` in all three pasted stubs now points at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations`. **The three stubs must be re-pasted into their Datto components** - they carry the URL, and nothing else updates them. Not urgent: GitHub redirects the old URL, so un-repasted components keep fetching correctly, but they depend on that redirect surviving. `Deploy-ArcCapacitySampler.ps1` goes to v1.8, `Invoke-ArcCapacityAnalyse.ps1` and `Invoke-ArcCapacityScreen.ps1` to v1.5; the fetched payloads are unchanged.
+
 ### Fixed
 - **A server with the Session Host role installed but no sessions was sized as a session host**
   (`Read-ArcCapacityBuffer.ps1` v1.19).

@@ -41,10 +41,10 @@ Run both elevated on the target machine (or bake into a gold image). On `develop
 
 ```powershell
 # 1. Apply once now (fetches LGPO.exe + the baseline, applies, refreshes policy):
-$p="$env:ProgramData\Arc Systems\GpoBaseline\Apply-Baseline.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/develop/gpo/Apply-Baseline.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -BaselineName arc-workstation-v1 -Branch develop
+$p="$env:ProgramData\Arc Systems\GpoBaseline\Apply-Baseline.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/gpo/Apply-Baseline.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -BaselineName arc-workstation-v1 -Branch develop
 
 # 2. Install the drift re-apply task (every 4h + at startup):
-$r="$env:ProgramData\Arc Systems\GpoBaseline\Register-DriftTask.ps1"; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/develop/gpo/Register-DriftTask.ps1 -OutFile $r; & $r -BaselineName arc-workstation-v1 -Branch develop -IntervalHours 4
+$r="$env:ProgramData\Arc Systems\GpoBaseline\Register-DriftTask.ps1"; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/gpo/Register-DriftTask.ps1 -OutFile $r; & $r -BaselineName arc-workstation-v1 -Branch develop -IntervalHours 4
 ```
 
 Verify what applied: `Get-ItemProperty 'HKLM:\SOFTWARE\Arc Systems\GpoBaseline'` and the transcripts under `C:\ArcLogs\GpoBaseline\`.

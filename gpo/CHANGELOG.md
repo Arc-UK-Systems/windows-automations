@@ -6,6 +6,9 @@ All notable changes to the GPO baseline tooling (`Apply-Baseline.ps1`, `Register
 
 _Work in progress on the `develop` branch. `$ScriptVersion` is `0.1.0-dev` here; the fetch one-liners and the `-Branch` defaults point at `/develop/`. On the first release cut these revert to `main` and `$ScriptVersion` drops to `0.1` (or `1.0` once validated)._
 
+### Changed
+- **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** The `/develop/` one-liners and fetch URLs now point at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/...`. GitHub redirects the old `Arc-hub-tech/Automations` URLs, so anything saved elsewhere keeps working, but it now depends on that redirect - use the new URL. The same change went to `main` as v1.7.1 / v0.2.2 / v1.0.1. The drift task's `-Branch` default and `$RepoRawBase` in `Apply-Baseline.ps1` move with it. No drift task is believed to be registered anywhere (this area is parked), but any that is would keep working on the redirect until re-registered.
+
 ### Added
 - **Initial scaffold — local-policy baseline as code, delivered via Git.** New `gpo/` area that manages Windows policy baselines as diffable LGPO text files in Git and delivers them by having each machine re-fetch and re-apply on a schedule. Mirrors Microsoft's Security Baseline model (author once → export → apply with `LGPO.exe`) but keeps only the **local-policy** path — no domain, no domain controller, no `Import-GPO`.
   - `Apply-Baseline.ps1` — applies a baseline to local policy via `LGPO.exe /t` (text file) or `/g` (GPO backup folder), then `gpupdate /force`. Bootstraps `LGPO.exe` from Microsoft if not staged; fetches the baseline from the repo branch (or a local `-Path`); idempotent, so re-runs re-assert the baseline and drift self-heals; stamps `HKLM\SOFTWARE\Arc Systems\GpoBaseline`; transcript-logs to `C:\ArcLogs\GpoBaseline\`.

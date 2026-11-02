@@ -11,7 +11,7 @@
     if the host network is not built yet. Open an elevated PowerShell prompt.
  2. DOWNLOAD-THEN-RUN (single line):
 
-       $p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Site.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/develop/hyperv-standalone/ArcHyperVHost-Site.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
+       $p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Site.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/develop/hyperv-standalone/ArcHyperVHost-Site.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
 
     OR from a USB stick:
 
@@ -68,7 +68,7 @@ param(
 
 # Version of this script, surfaced in the banner/transcript. All three standalone
 # scripts share one version; '-dev' suffix while work accumulates under [Unreleased].
-$ScriptVersion = '0.2.2-dev'
+$ScriptVersion = '0.2.3-dev'
 $ScriptRole    = 'Site'   # which half of the build; names the state entries and the logon task
 
 $ErrorActionPreference = 'Stop'
