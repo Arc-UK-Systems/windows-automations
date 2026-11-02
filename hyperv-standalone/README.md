@@ -17,15 +17,15 @@ Unlike `hyperv-cluster/`, there's no SCVMM and no peer node. The scripts build t
 Each script header has the one-liner. In short, from an elevated PowerShell prompt:
 
 ```powershell
-$p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Workshop.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/hyperv-standalone/ArcHyperVHost-Workshop.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
+$p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Workshop.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/hyperv-standalone/ArcHyperVHost-Workshop.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
 ```
 
 ```powershell
-$p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Site.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/hyperv-standalone/ArcHyperVHost-Site.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
+$p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Site.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/hyperv-standalone/ArcHyperVHost-Site.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
 ```
 
 ```powershell
-[Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Lite.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/hyperv-standalone/ArcHyperVHost-Lite.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Check
+[Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Lite.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/hyperv-standalone/ArcHyperVHost-Lite.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Check
 ```
 
 **The pen drive (recommended):** one stick carries both scripts and the HPE media for every ProLiant generation. Format it **NTFS or exFAT**, because SPP ISOs are bigger than FAT32's 4 GB limit.

@@ -30,7 +30,7 @@
   switches can't be passed. Drop -Inspect (or use -Restart) for the real run. Needs internet on
   the VM; if the move lost its network, copy the script to the VM and run it as below instead.
 
-  [Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:ProgramData\Arc\Migration\Remove-VMwareTools.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/vmware-migration/Remove-VMwareTools.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Inspect
+  [Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:ProgramData\Arc\Migration\Remove-VMwareTools.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/vmware-migration/Remove-VMwareTools.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Inspect
 
 .EXAMPLE
   powershell.exe -ExecutionPolicy Bypass -File .\Remove-VMwareTools.ps1 -Inspect

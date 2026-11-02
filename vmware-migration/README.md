@@ -29,7 +29,7 @@ the script over and run it with `powershell.exe -ExecutionPolicy Bypass -File .\
 1. **On VMware, before the move**, run `Save-PreMigrationConfig.ps1`:
 
    ```powershell
-   [Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:ProgramData\Arc\Migration\Save-PreMigrationConfig.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/vmware-migration/Save-PreMigrationConfig.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p
+   [Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:ProgramData\Arc\Migration\Save-PreMigrationConfig.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/vmware-migration/Save-PreMigrationConfig.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p
    ```
 
    It writes to `C:\ProgramData\Arc\Migration\`:
@@ -45,7 +45,7 @@ the script over and run it with `powershell.exe -ExecutionPolicy Bypass -File .\
    `-Inspect`, which changes nothing:
 
    ```powershell
-   [Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:ProgramData\Arc\Migration\Remove-VMwareTools.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/vmware-migration/Remove-VMwareTools.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Inspect
+   [Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:ProgramData\Arc\Migration\Remove-VMwareTools.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/vmware-migration/Remove-VMwareTools.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Inspect
    ```
 
    Then remove VMware Tools by running the saved copy (add `-Restart` to restart 15 seconds

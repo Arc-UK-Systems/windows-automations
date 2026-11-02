@@ -2,6 +2,13 @@
 
 All notable changes to `Prep-W11-VDI-GoldenImage.ps1`, `Prep-WS2025-RDSH-Template.ps1`, and `Prep-WS2025-Server-Template.ps1`.
 
+## [v1.7.1] - 2026-11-02
+
+Repository move only: no change to what the scripts do.
+
+### Changed
+- **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** The download one-liners now point at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/...`. GitHub redirects the old `Arc-hub-tech/Automations` URLs, so a one-liner saved elsewhere keeps working, but it now depends on that redirect - use the new URL. `$ScriptVersion` is `1.7.1` on all three, bumped in lockstep.
+
 ## [v1.7] - 2026-10-14
 
 **Tested** on Hyper-V lab VMs (Gen2, Default Switch) built fresh from the Windows 11 Enterprise 25H2 and Server 2025 Standard (Desktop Experience) ISOs. For each template the test ran stage 1, then the hands-free reboot and auto-logon into stage 2, then sysprep. The generalised template was then exported and imported as a new VM. Each clone booted with no input, renamed itself (`TST-VDI-*`, `TST-RDS-*`, `TST-SRV-*`) and landed at the sign-in screen. On every clone `unattend.xml`, `ArcDomainJoin.ps1`, the resume task and the template auto-logon were all gone, and the baseline settings held. A forced-failure run also confirmed that the new trap stops the run and closes the log. **Not covered by this test:** the VMware Tools step (Hyper-V, not VMware), the domain-join path (only rename was exercised), and the winget apps (the test harness drives the scripts over PowerShell Direct, where winget isn't available).
