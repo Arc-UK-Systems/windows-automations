@@ -41,6 +41,12 @@ _Work in progress on the `develop` branch._
 - **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** `$RepoRawBase` in all three pasted stubs now points at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations`. **The three stubs must be re-pasted into their Datto components** - they carry the URL, and nothing else updates them. Not urgent: GitHub redirects the old URL, so un-repasted components keep fetching correctly, but they depend on that redirect surviving. `Deploy-ArcCapacitySampler.ps1` goes to v1.8, `Invoke-ArcCapacityAnalyse.ps1` and `Invoke-ArcCapacityScreen.ps1` to v1.5; the fetched payloads are unchanged.
 
 ### Fixed
+- **The Deploy stub's header called itself "COMPONENT 1 of 2"** (`Deploy-ArcCapacitySampler.ps1`,
+  folded into v1.8). Left over from before the Screen component existed; the other two stubs
+  already read "2 of 3" and "3 of 3". Comment only, no behaviour change - but it is the first
+  thing read in the Datto console, and the stubs are being re-pasted for the repo move anyway.
+  No version bump: v1.8 is still unreleased and is not yet pasted into any component, so there
+  is no deployed v1.8 for this to diverge from.
 - **A server with the Session Host role installed but no sessions was sized as a session host**
   (`Read-ArcCapacityBuffer.ps1` v1.19).
   - **The pilot case:** an all-in-one RDS broker (broker, gateway, licensing, web access) has
