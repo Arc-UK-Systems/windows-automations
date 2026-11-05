@@ -116,7 +116,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; & E:\ArcHyperVHost\ArcHyperVHo
 **Or download the current release:**
 
 ```
-$p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Workshop.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/hyperv-standalone/ArcHyperVHost-Workshop.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
+$p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Workshop.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/hyperv-standalone/ArcHyperVHost-Workshop.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
 ```
 
 For the Site script, use the same commands with `ArcHyperVHost-Site.ps1`.
@@ -403,7 +403,7 @@ Every phase is safe to re-run. To repeat a single step, run that phase by name, 
 
 ## Reference
 
-→ Scripts, README and change log: https://github.com/Arc-hub-tech/Automations/tree/main/hyperv-standalone
+→ Scripts, README and change log: https://github.com/Arc-UK-Systems/windows-automations/tree/main/hyperv-standalone
 
 → This page's source in the repo: `hyperv-standalone/docs/ArcHyperVHost-Confluence-Guide.md`. Keep the two in step.
 

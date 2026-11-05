@@ -42,7 +42,7 @@ progress, `main` = production and branch-protected.
 one-liner. Three thin scripts are pasted into the Datto console once —
 `Deploy-ArcCapacitySampler.ps1`, `Invoke-ArcCapacityAnalyse.ps1`, `Invoke-ArcCapacityScreen.ps1`
 — and each fetches the real payload/logic fresh from `https://raw.githubusercontent.com/
-Arc-hub-tech/Automations/<branch>/datto-capacity-sampler/...` every time it runs, controlled by
+Arc-UK-Systems/windows-automations/<branch>/datto-capacity-sampler/...` every time it runs, controlled by
 the component's own `usrBranch` variable (default `main`). Revision delivery then just needs a
 git merge:
 

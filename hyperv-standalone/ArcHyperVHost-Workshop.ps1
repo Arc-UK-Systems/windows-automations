@@ -9,7 +9,7 @@
  1. Log on as a local administrator. Open an elevated PowerShell prompt.
  2. DOWNLOAD-THEN-RUN (single line):
 
-       $p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Workshop.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/hyperv-standalone/ArcHyperVHost-Workshop.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
+       $p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Workshop.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/hyperv-standalone/ArcHyperVHost-Workshop.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Next
 
     OR from a USB stick (no internet for the script itself):
 
@@ -79,7 +79,7 @@ param(
 
 # Version of this script, surfaced in the banner/transcript. All three standalone
 # scripts share one version; '-dev' suffix while work accumulates under [Unreleased].
-$ScriptVersion = '0.2.1'
+$ScriptVersion = '0.2.2'
 $ScriptRole    = 'Workshop'   # which half of the build; names the state entries and the logon task
 
 $ErrorActionPreference = 'Stop'

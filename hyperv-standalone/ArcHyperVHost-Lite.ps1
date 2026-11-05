@@ -25,7 +25,7 @@
     it is needed) restarts the switch adapters, which drops RDP for a few seconds.
  2. DOWNLOAD-THEN-RUN (single line). Check is read-only:
 
-       [Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Lite.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-hub-tech/Automations/main/hyperv-standalone/ArcHyperVHost-Lite.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Check
+       [Net.ServicePointManager]::SecurityProtocol='Tls12'; $p="$env:SystemDrive\ArcLogs\HyperVHost\ArcHyperVHost-Lite.ps1"; md (Split-Path $p) -Force|Out-Null; irm https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/hyperv-standalone/ArcHyperVHost-Lite.ps1 -OutFile $p; Set-ExecutionPolicy Bypass -Scope Process -Force; & $p -Phase Check
 
     OR, with no internet access, copy just this one file to the host (USB stick,
     RDP clipboard, a file share) and run it from wherever it is:
@@ -70,7 +70,7 @@ param(
 
 # Version of this script, surfaced in the banner/transcript. All three standalone
 # scripts share one version; '-dev' suffix while work accumulates under [Unreleased].
-$ScriptVersion = '0.2.1'
+$ScriptVersion = '0.2.2'
 $ScriptRole    = 'Lite'   # names the state entries, logs and report
 
 $ErrorActionPreference = 'Stop'

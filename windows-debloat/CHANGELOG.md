@@ -2,6 +2,13 @@
 
 All notable changes to `Debloat-Windows.ps1`.
 
+## [v1.0.1] - 2026-11-02
+
+Repository move only: no change to what the script does.
+
+### Changed
+- **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** The download one-liners now point at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/...`. GitHub redirects the old `Arc-hub-tech/Automations` URLs, so a one-liner saved elsewhere keeps working, but it now depends on that redirect - use the new URL. `$ScriptVersion` is `1.0.1`. The engineer guide (`docs/`) carries the new one-liners too, so the Confluence page needs re-publishing from it.
+
 ## [v1.0] - 2026-10-13
 
 ### Added

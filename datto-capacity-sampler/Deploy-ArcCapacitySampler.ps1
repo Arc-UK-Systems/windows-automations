@@ -42,6 +42,11 @@
                                                         usrUninstall=true. Set explicitly
                                                         to 0 to disable the marker
 
+    Version : 1.8  -  02/11/2026  (the repo moved to the Arc-UK-Systems organisation and was
+              renamed windows-automations, so $RepoRawBase points at the new path. GitHub
+              redirects the old URL, so a component still carrying the 1.7 paste keeps
+              working - but re-paste this stub to stop depending on that redirect)
+
     Version : 1.7  -  19/08/2026  (seed sample now polls for the first data row instead of
               sleeping a fixed 12s and testing only that the buffer file exists - the old check
               reported "Seed sample taken ... 0 sample(s)" on a real fresh install)
@@ -73,7 +78,7 @@ $ProgressPreference    = 'SilentlyContinue'
 # "an older paste" versus "a per-job variable override" from the log alone.
 # Emitted before anything that can fail, so even a crashed run identifies
 # itself.
-$ScriptVersion = '1.7'
+$ScriptVersion = '1.8'
 Write-Output "Deploy-ArcCapacitySampler.ps1 v$ScriptVersion"
 
 # Force TLS 1.2 for the GitHub fetch on older PowerShell hosts (2012R2/2016 default
@@ -117,7 +122,7 @@ $EnrollUdfRaw = [Environment]::GetEnvironmentVariable('usrEnrollUdf')
 $EnrollUdf    = if (-not [string]::IsNullOrWhiteSpace($EnrollUdfRaw) -and $EnrollUdfRaw.Trim() -eq '0') { 0 } `
                 else { Get-DattoInt -Name 'usrEnrollUdf' -Default 79 }
 
-$RepoRawBase = 'https://raw.githubusercontent.com/Arc-hub-tech/Automations'
+$RepoRawBase = 'https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations'
 $InstallDir  = 'C:\ProgramData\Arc\CapacitySampler'
 $ScriptName  = 'Arc-CapacitySampler.ps1'
 $ScriptPath  = Join-Path $InstallDir $ScriptName
