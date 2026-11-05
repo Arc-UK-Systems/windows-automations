@@ -2,7 +2,7 @@
     Deploy-ArcCapacitySampler.ps1
     Datto capacity sampling toolset
 
-    DATTO RMM COMPONENT 1 of 2  -  Script (PowerShell), Windows, Devices
+    DATTO RMM COMPONENT 1 of 3  -  Script (PowerShell), Windows, Devices
 
     Purpose : Installs Arc-CapacitySampler.ps1 to C:\ProgramData\Arc\CapacitySampler
               and registers a scheduled task to run it every 15 minutes as SYSTEM.
