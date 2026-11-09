@@ -2,7 +2,7 @@
 .SYNOPSIS
   After migration: removes VMware Tools from a Windows VM now running on Hyper-V,
   and checks the VM against its pre-migration capture.
-  Arc Systems - VMware to Hyper-V migrations. Version 2.0.1
+  Arc Systems - VMware to Hyper-V migrations. Version 2.0.2
 
 .DESCRIPTION
   Refuses to run unless the VM is on Hyper-V.
@@ -13,9 +13,13 @@
     1. finds the cached VMware Tools installer Windows uses for the uninstall
        (C:\Windows\Installer\*.msi) and backs it up to C:\ProgramData\Arc\Migration
     2. disables only the VMware-only steps in it, by setting their condition to 0:
-       VM_CheckRequirements, VM_LogStart, VM_UninstGHIRestGuestHandle
+       VM_CheckRequirements, VM_LogStart, VM_UninstGHIRestGuestHandle,
+       VM_UninstallPerUserHgfs
        (also when the name carries a merge-module suffix, as in VMware Tools 12.x:
        VM_UninstGHIRestGuestHandle.869A7E00_8665_0000_83A8_EF0F76CF0001)
+       VM_UninstallPerUserHgfs only tidies per-user Shared Folders settings after the HGFS
+       driver itself has been removed; on Hyper-V it can fail with 1603 and roll back the
+       whole uninstall. Skipping it can leave harmless per-user Shared Folders entries.
     3. runs the normal silent uninstall with a full log
     4. if the uninstall fails, puts the original cached installer back
   Then reports, without changing anything: VMware entries and services remaining,
@@ -99,7 +103,7 @@ function Invoke-MsiSql($db, [string]$sql) {
     [void](Invoke-Com $view 'Close' 'InvokeMethod' $null)
     [void][Runtime.InteropServices.Marshal]::ReleaseComObject($view)
 }
-$vmActions = 'VM_CheckRequirements', 'VM_LogStart', 'VM_UninstGHIRestGuestHandle'
+$vmActions = 'VM_CheckRequirements', 'VM_LogStart', 'VM_UninstGHIRestGuestHandle', 'VM_UninstallPerUserHgfs'
 $seqTables = 'InstallExecuteSequence', 'InstallUISequence', 'AdminExecuteSequence', 'AdminUISequence', 'AdvtExecuteSequence'
 
 # Returns the sequence rows for the VMware-only actions: Table, Action, Condition, Sequence
