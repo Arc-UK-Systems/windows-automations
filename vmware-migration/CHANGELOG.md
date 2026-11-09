@@ -13,6 +13,7 @@ All notable changes to `Save-PreMigrationConfig.ps1` and `Remove-VMwareTools.ps1
 
 ### Fixed
 - `Remove-VMwareTools.ps1` v2.0.1: VMware-only steps are now matched by the name before any `.<module GUID>` suffix. In VMware Tools 12.x, `VM_UninstGHIRestGuestHandle` comes from a merge module and is named `VM_UninstGHIRestGuestHandle.869A7E00_8665_0000_83A8_EF0F76CF0001`, so v2.0's exact match missed it, left it enabled, and the uninstall rolled back with 1603 at "Restoring guest handlers" (seen on a Dedman Gray VM with VMware Tools 12.5.4). Other suffixed actions such as `VM_UninstVMToolsSv.*` are still left alone.
+- `Remove-VMwareTools.ps1` v2.0.2: also skips `VM_UninstallPerUserHgfs`. With v2.0.1 the same VM (a domain controller) got further, then this step returned 1603 and rolled the whole uninstall back. It only tidies per-user Shared Folders settings after `VM_UninstallHgfsDrv` has removed the HGFS driver, which still runs; skipping it can leave harmless per-user Shared Folders entries.
 
 ### Changed
 - **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** The download one-liners now point at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations/main/...`. GitHub redirects the old `Arc-hub-tech/Automations` URLs, so a one-liner saved elsewhere keeps working, but it now depends on that redirect - use the new URL.
