@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Before migration: records a Windows VM's configuration while it is still on VMware.
-  Arc Systems - VMware to Hyper-V migrations. Version 1.0
+  Arc Systems - VMware to Hyper-V migrations. Version 1.1
 
 .DESCRIPTION
   Read-only apart from writing its report files. It does not change any setting.
@@ -9,9 +9,11 @@
     pre-migration.json  - read by Remove-VMwareTools.ps1 after migration
     pre-migration.txt   - readable copy for the migration ticket
   Records: computer, domain and OS; VMware Tools version and product code;
+  firmware type and the Hyper-V boot drivers (vmbus, storvsc) with any StartOverride;
   every network adapter (IP addresses, mask, gateway, DNS, DHCP, MAC, DNS registration);
   persistent static routes; disks (online state) and volumes (drive letters).
   If an earlier capture exists, it is renamed with a timestamp, never overwritten.
+  Flags ACTION REQUIRED (MT-001) when a StartOverride would stop the VM booting on Hyper-V.
 
 .EXAMPLE
   One-liner: paste as a single line into an elevated Windows PowerShell. It saves the script to
@@ -52,6 +54,25 @@ $keys = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
 $tools = @(Get-ItemProperty $keys -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq 'VMware Tools' } |
     ForEach-Object { [pscustomobject]@{ Version = $_.DisplayVersion; ProductCode = $_.PSChildName; InstallLocation = $_.InstallLocation } })
 
+# Hyper-V boot drivers (MT-001). On Hyper-V the boot disk is reached through vmbus and storvsc.
+# Windows demotes boot drivers the current hardware doesn't use with a StartOverride subkey, which
+# takes priority over Start, so the VM stops with INACCESSIBLE_BOOT_DEVICE after the move.
+$firmware = if ($env:firmware_type) { $env:firmware_type } else { 'Unknown' }
+$bootDrivers = @(foreach ($s in 'vmbus', 'storvsc') {
+    $k = "HKLM:\SYSTEM\CurrentControlSet\Services\$s"
+    $override = @()
+    if (Test-Path "$k\StartOverride") {
+        $o = Get-Item "$k\StartOverride"
+        $override = @($o.GetValueNames() | ForEach-Object { "$_=$($o.GetValue($_))" })
+    }
+    [pscustomobject]@{
+        Service       = $s
+        Start         = (Get-ItemProperty $k -ErrorAction SilentlyContinue).Start
+        StartOverride = $override
+    }
+})
+$bootFixFor = @($bootDrivers | Where-Object { $_.StartOverride.Count } | ForEach-Object Service)
+
 $network = @(Get-NetAdapter | ForEach-Object {
     $a    = $_
     $ip   = @(Get-NetIPAddress -InterfaceIndex $a.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue)
@@ -90,6 +111,9 @@ $report = [pscustomobject]@{
     OS          = "$($os.Caption) ($($os.Version))"
     Platform    = "$($cs.Manufacturer) / $($cs.Model)"
     VMwareTools = $tools
+    Firmware    = $firmware
+    BootDrivers = $bootDrivers
+    BootDriverFixNeeded = [bool]$bootFixFor.Count
     Network     = $network
     Routes      = $routes
     Disks       = $disks
@@ -116,6 +140,14 @@ $lines += ""
 $lines += "--- VMware Tools ---"
 $lines += ($tools | Format-List | Out-String).Trim()
 $lines += ""
+$lines += "--- Hyper-V boot drivers (MT-001) ---"
+$lines += "Firmware : $firmware"
+$lines += ($bootDrivers | Select-Object Service, Start,
+    @{n='StartOverride';e={ if ($_.StartOverride.Count) { $_.StartOverride -join ', ' } else { 'None' } }} |
+    Format-Table -AutoSize | Out-String).Trim()
+$lines += if ($bootFixFor.Count) { "Fix needed : YES - StartOverride on $($bootFixFor -join ', '). Run the MT-001 fix before the final shutdown." }
+          else { 'Fix needed : No' }
+$lines += ""
 $lines += "--- Network adapters ---"
 $lines += ($network | Select-Object Name, Description, Status, MacAddress, DHCP,
     @{n='IPv4';e={$_.IPv4 -join ', '}}, @{n='Gateway';e={$_.Gateway -join ', '}}, @{n='DNS';e={$_.DNS -join ', '}}, RegisterInDNS |
@@ -136,3 +168,10 @@ Get-Content $txt
 Write-Host "Saved: $json" -ForegroundColor Green
 Write-Host "Saved: $txt" -ForegroundColor Green
 "No settings were changed. Copy pre-migration.txt into the migration ticket."
+""
+if ($bootFixFor.Count) {
+    Write-Host "ACTION REQUIRED (MT-001) - StartOverride found on $($bootFixFor -join ', '). This VM will probably fail to boot on Hyper-V (INACCESSIBLE_BOOT_DEVICE)." -ForegroundColor Red
+    Write-Host "Run 'Fix before migration' from MT-001 in the Migration troubleshooting guide, then shut the VM down for the final backup. Do not restart it: Windows writes StartOverride again at startup." -ForegroundColor Red
+} else {
+    Write-Host 'Hyper-V boot drivers: no StartOverride found. No MT-001 fix needed.' -ForegroundColor Green
+}

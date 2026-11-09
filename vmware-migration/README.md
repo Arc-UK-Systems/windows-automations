@@ -9,7 +9,7 @@ for its current version.
 
 | Script | When | Changes anything? | Purpose |
 | --- | --- | --- | --- |
-| `Save-PreMigrationConfig.ps1` | Before migration, on VMware | No (writes its report files only) | Records network, routes, disks, volumes and the VMware Tools install |
+| `Save-PreMigrationConfig.ps1` | Before migration, on VMware | No (writes its report files only) | Records network, routes, disks, volumes and the VMware Tools install; flags `StartOverride` on the Hyper-V boot drivers |
 | `Remove-VMwareTools.ps1` | After migration, on Hyper-V | Yes (uninstalls VMware Tools) | Removes VMware Tools, then compares the VM with the pre-migration capture |
 
 Both refuse to run unless elevated, and each refuses to run on the wrong platform
@@ -37,6 +37,11 @@ the script over and run it with `powershell.exe -ExecutionPolicy Bypass -File .\
    - `pre-migration.txt`, a readable copy for the migration ticket.
 
    An earlier capture is renamed with a timestamp, never overwritten.
+
+   If it ends with a red **ACTION REQUIRED (MT-001)**, `vmbus` or `storvsc` has a
+   `StartOverride` that will stop the VM booting on Hyper-V. Run the MT-001 fix before the final
+   shutdown, then shut the VM down rather than restarting it: Windows writes `StartOverride`
+   again at startup.
 
 2. **Migrate the VM.**
 
