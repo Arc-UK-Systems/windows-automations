@@ -2,7 +2,7 @@
 .SYNOPSIS
   After migration: removes VMware Tools from a Windows VM now running on Hyper-V,
   and checks the VM against its pre-migration capture.
-  Arc Systems - VMware to Hyper-V migrations. Version 2.0
+  Arc Systems - VMware to Hyper-V migrations. Version 2.0.1
 
 .DESCRIPTION
   Refuses to run unless the VM is on Hyper-V.
@@ -14,6 +14,8 @@
        (C:\Windows\Installer\*.msi) and backs it up to C:\ProgramData\Arc\Migration
     2. disables only the VMware-only steps in it, by setting their condition to 0:
        VM_CheckRequirements, VM_LogStart, VM_UninstGHIRestGuestHandle
+       (also when the name carries a merge-module suffix, as in VMware Tools 12.x:
+       VM_UninstGHIRestGuestHandle.869A7E00_8665_0000_83A8_EF0F76CF0001)
     3. runs the normal silent uninstall with a full log
     4. if the uninstall fails, puts the original cached installer back
   Then reports, without changing anything: VMware entries and services remaining,
@@ -107,7 +109,8 @@ function Get-VMwareSequenceRows($db) {
     foreach ($t in $seqTables) {
         if ($tables -notcontains $t) { continue }
         foreach ($r in (Get-MsiRows $db "SELECT ``Action``, ``Condition``, ``Sequence`` FROM ``$t``" 3)) {
-            if ($vmActions -contains $r[0]) {
+            # Actions from a merge module carry a .<module GUID> suffix, so match the name before it
+            if ($vmActions -contains ($r[0] -split '\.', 2)[0]) {
                 $found += [pscustomobject]@{ Table = $t; Action = $r[0]; Condition = $r[1]; Sequence = $r[2] }
             }
         }
