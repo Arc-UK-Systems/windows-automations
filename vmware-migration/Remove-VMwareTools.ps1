@@ -2,7 +2,7 @@
 .SYNOPSIS
   After migration: removes VMware Tools from a Windows VM now running on Hyper-V,
   and checks the VM against its pre-migration capture.
-  Arc Systems - VMware to Hyper-V migrations. Version 2.0.2
+  Arc Systems - VMware to Hyper-V migrations. Version 2.0.3
 
 .DESCRIPTION
   Refuses to run unless the VM is on Hyper-V.
@@ -30,6 +30,12 @@
   -Inspect   Read-only. Shows the cached installer and the VMware steps that would
              be disabled, then stops. Changes nothing.
 
+  -ProductCode {GUID}
+             Removes only the VMware Tools product with this product code. Needed when
+             Windows lists more than one VMware Tools product (left over from an earlier
+             upgrade): without it the script stops. Remove the newest version first,
+             restart, then run again with the older product code.
+
 .EXAMPLE
   One-liner: paste as a single line into an elevated Windows PowerShell. It saves the script to
   C:\ProgramData\Arc\Migration and runs it. Do not use irm | iex: exit would close the window and
@@ -44,7 +50,7 @@
   powershell.exe -ExecutionPolicy Bypass -File .\Remove-VMwareTools.ps1 -Restart
 #>
 [CmdletBinding()]
-param([switch]$Restart, [switch]$Inspect)
+param([switch]$Restart, [switch]$Inspect, [string]$ProductCode)
 
 $ErrorActionPreference = 'Stop'
 $outDir = 'C:\ProgramData\Arc\Migration'
@@ -126,6 +132,16 @@ function Get-VMwareSequenceRows($db) {
 $keys = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
         'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
 $entries = @(Get-ItemProperty $keys -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq 'VMware Tools' })
+if ($ProductCode) {
+    $all = $entries
+    $entries = @($all | Where-Object { $_.PSChildName -eq $ProductCode })
+    if ($entries.Count -eq 0) {
+        Write-Host "STOP - no VMware Tools entry has product code $ProductCode. Nothing changed. Entries:" -ForegroundColor Red
+        $all | Format-List DisplayName, DisplayVersion, PSChildName, InstallLocation
+        exit 1
+    }
+    if ($all.Count -gt 1) { "Removing only $ProductCode; $($all.Count - 1) other VMware Tools entry left for a later run." }
+}
 
 $rc = $null
 if ($entries.Count -eq 0) {
@@ -133,7 +149,9 @@ if ($entries.Count -eq 0) {
 }
 elseif ($entries.Count -gt 1) {
     Write-Host 'STOP - more than one VMware Tools entry found. Nothing changed. Entries:' -ForegroundColor Red
-    $entries | Format-List DisplayName, DisplayVersion, PSChildName, InstallLocation
+    $entries | Sort-Object { [version]($_.DisplayVersion -replace '[^0-9.]', '') } -Descending |
+        Format-List DisplayName, DisplayVersion, PSChildName, InstallLocation
+    Write-Host 'Run again with -ProductCode <PSChildName>, newest version (listed first) first, then restart and run for the next.' -ForegroundColor Yellow
     exit 1
 }
 else {
