@@ -25,6 +25,13 @@
               rather than repeat a write error every 15 minutes. Datto's own
               low-disk-space monitor is the actual alert for that condition.
 
+    Version : 1.7  -  10/11/2026  (ActiveSessions is now actually recorded. The session
+              counters were read from Win32_PerfFormattedData_TermService_TerminalServices,
+              which is an invalid class on current Windows, so the column was blank in every
+              sample and a WARN was logged every 15 minutes. Now reads the LocalSessionManager
+              class first, with the old class as a fallback. Same column, so the buffer
+              header is unchanged and nothing is archived or reset)
+
     Version : 1.6  -  19/08/2026  (ring buffer now actually trims - the row count driving the
               trim test used Get-Content -ReadCount 0, which returns the file as a single
               array object, so the count was permanently 0 and retention was never enforced.
@@ -248,9 +255,23 @@ try {
     # =======================================================================
     # RDSH session count (only meaningful where the role is present)
     # =======================================================================
+    #   The "Terminal Services" counter set moved providers: on current
+    #   Windows it is the LocalSessionManager class, and the old TermService
+    #   class is an invalid class there. Only the old name was queried, so
+    #   ActiveSessions was blank in every sample on every modern server (and
+    #   a WARN was logged every 15 minutes). Try the current class first, then
+    #   the old one for older builds. Queried directly rather than through
+    #   Get-CimSafe: one of the two is expected to be missing, and that isn't
+    #   worth a log line per sample. Active sessions excludes the services
+    #   session and disconnected sessions (those count as inactive).
     $activeSessions = $null
-    $ts = Get-CimSafe -ClassName 'Win32_PerfFormattedData_TermService_TerminalServices'
-    if ($ts) { $activeSessions = [int]$ts.ActiveSessions }
+    foreach ($tsClass in 'Win32_PerfFormattedData_LocalSessionManager_TerminalServices',
+                         'Win32_PerfFormattedData_TermService_TerminalServices') {
+        try {
+            $ts = Get-CimInstance -ClassName $tsClass -ErrorAction Stop | Select-Object -First 1
+            if ($ts -and $null -ne $ts.ActiveSessions) { $activeSessions = [int]$ts.ActiveSessions; break }
+        } catch { }
+    }
 
     # =======================================================================
     # SQL Server supplementary metrics
