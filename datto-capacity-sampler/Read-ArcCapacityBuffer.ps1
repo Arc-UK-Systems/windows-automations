@@ -84,6 +84,12 @@
               usrConservative  Boolean  default false Short-window mode: max x1.4, gross only
                                                       Forced on when usrWindowDays < 7
 
+    Version : 1.21 -  10/11/2026  (RDSH-IDLE never fired: the sampler had never recorded
+              sessions - see Arc-CapacitySampler.ps1 v1.7 - so the test always fell back to
+              the installed role. Now that sessions are recorded, the test needs a full week
+              of session samples before it is used, and the bar is p95 of at least 1 active
+              session rather than 2, so a small site's one-user session host keeps its role)
+
     Version : 1.20 -  23/10/2026  (new usrReduceUdf field, default Custom74, holding the vCPU
               reduction as a DELTA. Cap: Rec vCPU is an absolute count, so "no reduction" reads
               as the current core count rather than 00 and the only filter that would find
@@ -827,12 +833,16 @@ function Get-ServerRole {
     # installed with every session landing on separate hosts - the pilot
     # broker did, and got session-host floors (8GB / 4 vCPU) it doesn't need.
     # The sampler counts active sessions every 15 minutes, so require real
-    # use: p95 of at least 2 active sessions. An idle role is flagged
-    # RDSH-IDLE (it could be removed) and the host is sized on its other
-    # roles. Admin logons alone stay under the bar; with no session data
-    # (-1), the installed role is trusted as before.
+    # use: p95 of at least 1 active session, i.e. someone actively logged on
+    # for 5% of the window or more (about 17 hours in 14 days). An idle role
+    # is flagged RDSH-IDLE (it could be removed) and the host is sized on its
+    # other roles. The bar is 1, not 2: a small site's session host can
+    # genuinely serve one user, and wrongly dropping its floors is the costly
+    # mistake, where an admin's occasional logon keeping a broker's floors is
+    # harmless. Disconnected sessions don't count as active. With too little
+    # session data (-1, see the caller), the installed role is trusted.
     if ($isRdsh) {
-        if ($SessionP95 -ge 0 -and $SessionP95 -lt 2) {
+        if ($SessionP95 -ge 0 -and $SessionP95 -lt 1) {
             $flags.Add('RDSH-IDLE')
         } else {
             if ($role -eq 'Generic') { $role = 'RDSH' }
@@ -949,7 +959,12 @@ try {
     $sqlSampledGB = if ($sqlTotalVals.Count) { [math]::Round((Get-Percentile -Values $sqlTotalVals -P 0.95), 2) } else { 0 }
     # Active sessions over the window, for the RDSH use test in role detection
     $sessVals   = Get-NumericColumn -Rows $rows -Column 'ActiveSessions'
-    $sessionP95 = if ($sessVals.Count) { [math]::Round((Get-Percentile -Values $sessVals -P 0.95), 1) } else { -1 }
+    # Needs a full week of session samples before it's used: sampler v1.6 and
+    # earlier never recorded sessions (it queried a class that doesn't exist
+    # on current Windows), so after v1.7 lands the column fills gradually. A
+    # real session host judged on its first weekend of data would read idle.
+    $sessNeeded = [int]((7 * 24 * 60) / $Interval)
+    $sessionP95 = if ($sessVals.Count -ge $sessNeeded) { [math]::Round((Get-Percentile -Values $sessVals -P 0.95), 1) } else { -1 }
     $roleInfo   = Get-ServerRole -AllocatedGB $allocatedGB -SqlSampledGB $sqlSampledGB -SessionP95 $sessionP95
     $role       = $roleInfo.Role
     $flags      = $roleInfo.Flags
