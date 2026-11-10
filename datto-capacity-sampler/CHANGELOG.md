@@ -41,6 +41,32 @@ _Work in progress on the `develop` branch._
 - **Repository moved to the `Arc-UK-Systems` organisation and renamed `windows-automations`.** `$RepoRawBase` in all three pasted stubs now points at `https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations`. **The three stubs must be re-pasted into their Datto components** - they carry the URL, and nothing else updates them. Not urgent: GitHub redirects the old URL, so un-repasted components keep fetching correctly, but they depend on that redirect surviving. `Deploy-ArcCapacitySampler.ps1` goes to v1.8, `Invoke-ArcCapacityAnalyse.ps1` and `Invoke-ArcCapacityScreen.ps1` to v1.5; the fetched payloads are unchanged.
 
 ### Fixed
+- **The sampler never recorded active sessions, so `RDSH-IDLE` could never fire**
+  (`Arc-CapacitySampler.ps1` v1.7, `Read-ArcCapacityBuffer.ps1` v1.21).
+  - **How it showed:** an estate export three weeks after the `RDSH-IDLE` release had the flag on
+    zero of 513 devices, and the pilot broker still read as a session host. Its buffer held 1,368
+    samples, every one with a blank `ActiveSessions`.
+  - **The cause:** the sampler read the session counters from
+    `Win32_PerfFormattedData_TermService_TerminalServices`, which is an invalid class on current
+    Windows. The "Terminal Services" counter set is published as
+    `Win32_PerfFormattedData_LocalSessionManager_TerminalServices`. The failed query also logged a
+    WARN to `sampler.log` every 15 minutes.
+  - **The sampler fix:** it reads the LocalSessionManager class first, with the old class as a
+    fallback for older builds, and no longer logs when one is missing. It fills the existing
+    `ActiveSessions` column, so the buffer header is unchanged and nothing is archived or reset.
+  - **The analyse changes:**
+    - The session test needs a **full week** of session samples before it's used. The column
+      fills gradually once the new sampler lands, and a real session host judged on its first
+      weekend would read idle. Until then the installed role is trusted, as now.
+    - The bar is a **p95 of at least 1** active session, not 2. A small site's session host can
+      serve one user, and wrongly dropping its floors is the costly mistake; an admin's occasional
+      logon keeping a broker's floors is harmless.
+  - **Tests:** the old sampler then the new one against the same buffer (the new row carries a
+    session count, no schema archive, no new WARN), and seven analyse cases (idle broker, broker
+    with occasional admin logon, one-user session host, busy session host, three days of data,
+    eight days of data, no data).
+  - **Rollout:** devices pick the sampler up on their next Deploy run. `RDSH-IDLE` can first
+    appear on an Analyse run at least a week after that.
 - **The Deploy stub's header called itself "COMPONENT 1 of 2"** (`Deploy-ArcCapacitySampler.ps1`,
   folded into v1.8). Left over from before the Screen component existed; the other two stubs
   already read "2 of 3" and "3 of 3". Comment only, no behaviour change - but it is the first
