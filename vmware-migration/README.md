@@ -10,7 +10,7 @@ for its current version.
 | Script | When | Changes anything? | Purpose |
 | --- | --- | --- | --- |
 | `Save-PreMigrationConfig.ps1` | Before migration, on VMware | No (writes its report files only) | Records network, routes, disks, volumes and the VMware Tools install; flags `StartOverride` on the Hyper-V boot drivers |
-| `Remove-VMwareTools.ps1` | After migration, on Hyper-V | Yes (uninstalls VMware Tools) | Removes VMware Tools, then compares the VM with the pre-migration capture |
+| `Remove-VMwareTools.ps1` | After migration, on Hyper-V | Yes (uninstalls VMware Tools and the vCenter Converter agent) | Removes VMware Tools and any leftover vCenter Converter Standalone agent, then compares the VM with the pre-migration capture |
 
 Both refuse to run unless elevated, and each refuses to run on the wrong platform
 (`Save-PreMigrationConfig.ps1` only on VMware, `Remove-VMwareTools.ps1` only on Hyper-V).
@@ -75,9 +75,13 @@ other hypervisor, so a normal uninstall on Hyper-V rolls back with error 1603 (B
    `VM_CheckRequirements`, `VM_LogStart`, `VM_UninstGHIRestGuestHandle`;
 3. runs the normal silent uninstall (`msiexec /x <product code> /qn /norestart`) with a verbose
    log in `C:\ProgramData\Arc\Migration\`;
-4. if the uninstall fails, puts the original cached installer back.
+4. if the uninstall fails, puts the original cached installer back;
+5. uninstalls the VMware vCenter Converter Standalone agent if it is installed. It is left over
+   from converting the server, has no use on Hyper-V and runs as a LocalSystem service listening
+   on the network. Its uninstall is an ordinary one, logged to `Converter-uninstall-<time>.log`.
 
-`-Inspect` shows the cached installer and the steps that would be disabled, then stops without
+`-Inspect` shows the cached installer, the steps that would be disabled and whether the Converter
+agent would be uninstalled, then stops without
 changing anything.
 
 ## Post-migration checks
@@ -105,6 +109,7 @@ All in `C:\ProgramData\Arc\Migration\` on the VM:
 | `pre-migration-<time>.json/.txt` | `Save-PreMigrationConfig.ps1`, when an earlier capture is kept |
 | `<cached msi>-<time>.original` | `Remove-VMwareTools.ps1`, backup of the cached installer |
 | `VMwareTools-uninstall-<time>.log` | `Remove-VMwareTools.ps1`, msiexec verbose log |
+| `Converter-uninstall-<time>.log` | `Remove-VMwareTools.ps1`, msiexec verbose log for the Converter agent |
 
 These files describe the customer's network. Keep them out of this repository.
 

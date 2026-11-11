@@ -2,7 +2,7 @@
 .SYNOPSIS
   After migration: removes VMware Tools from a Windows VM now running on Hyper-V,
   and checks the VM against its pre-migration capture.
-  Arc Systems - VMware to Hyper-V migrations. Version 2.0.3
+  Arc Systems - VMware to Hyper-V migrations. Version 2.1.0
 
 .DESCRIPTION
   Refuses to run unless the VM is on Hyper-V.
@@ -22,13 +22,16 @@
        whole uninstall. Skipping it can leave harmless per-user Shared Folders entries.
     3. runs the normal silent uninstall with a full log
     4. if the uninstall fails, puts the original cached installer back
+  v2.1: also uninstalls the VMware vCenter Converter Standalone agent if it is installed. It is
+  left over from converting the server, has no use on Hyper-V, and runs as a network-listening
+  LocalSystem service. Its uninstall is an ordinary one, so the installer is not changed.
   Then reports, without changing anything: VMware entries and services remaining,
   Hyper-V integration services, network adapters compared with the pre-migration
   capture, offline disks, missing drive letters and old VMware network devices.
   Does not restart the VM unless -Restart is given.
 
   -Inspect   Read-only. Shows the cached installer and the VMware steps that would
-             be disabled, then stops. Changes nothing.
+             be disabled, and whether the Converter agent would be uninstalled. Changes nothing.
 
   -ProductCode {GUID}
              Removes only the VMware Tools product with this product code. Needed when
@@ -132,6 +135,11 @@ function Get-VMwareSequenceRows($db) {
 $keys = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
         'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
 $entries = @(Get-ItemProperty $keys -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq 'VMware Tools' })
+$converter = @(Get-ItemProperty $keys -ErrorAction SilentlyContinue | Where-Object {
+    $_.DisplayName -like 'VMware vCenter Converter Standalone*' -and $_.PSChildName -match '^\{[0-9A-Fa-f-]{36}\}$' })
+function Get-ConverterNote {
+    if ($converter.Count) { ($converter | ForEach-Object { "$($_.DisplayName) $($_.DisplayVersion) $($_.PSChildName)" }) -join '; ' }
+}
 if ($ProductCode) {
     $all = $entries
     $entries = @($all | Where-Object { $_.PSChildName -eq $ProductCode })
@@ -184,6 +192,7 @@ else {
         ""
         if ($toDisable.Count) { "Inspect only: $($toDisable.Count) step(s) above would be disabled (condition set to 0). Nothing changed." }
         else { "Inspect only: no VMware-only steps need disabling. Nothing changed." }
+        if ($converter.Count) { "Inspect only: would also uninstall $(Get-ConverterNote)." }
         exit 0
     }
 
@@ -234,6 +243,30 @@ else {
         if ($wasReadOnly) { (Get-Item $cached).IsReadOnly = $true }
         if ((Get-FileHash $cached).Hash -eq (Get-FileHash $backup).Hash) { "Original cached installer restored to $cached" }
         else { $warnings += "Could not restore the original cached installer. Backup is at $backup" }
+    }
+}
+
+# ---------------- Uninstall the VMware vCenter Converter Standalone agent (v2.1) ----------------
+$convRestart = $false
+if ($converter.Count -and $Inspect) {
+    ""
+    "Inspect only: would uninstall $(Get-ConverterNote). Nothing changed."
+}
+elseif ($converter.Count) {
+    if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
+    foreach ($c in $converter) {
+        ""
+        "Found $($c.DisplayName) $($c.DisplayVersion), product code $($c.PSChildName)"
+        $clog = Join-Path $outDir "Converter-uninstall-$stamp.log"
+        "Uninstalling silently. Log: $clog"
+        $cp = Start-Process -FilePath msiexec.exe -ArgumentList "/x $($c.PSChildName) /qn /norestart REBOOT=ReallySuppress /l*v `"$clog`"" -Wait -PassThru
+        switch ($cp.ExitCode) {
+            0       { Write-Host 'Result   : uninstalled (exit code 0)' -ForegroundColor Green }
+            3010    { Write-Host 'Result   : uninstalled - restart required to finish (exit code 3010)' -ForegroundColor Green; $convRestart = $true }
+            1605    { Write-Host 'Result   : msiexec reports the product is not installed (exit code 1605)' -ForegroundColor Yellow }
+            default { Write-Host "Result   : FAILED (exit code $($cp.ExitCode)). Keep the log for review: $clog" -ForegroundColor Red
+                      $warnings += "$($c.DisplayName) uninstall failed with exit code $($cp.ExitCode) - see $clog" }
+        }
     }
 }
 
@@ -331,7 +364,7 @@ if ($warnings.Count -eq 0) {
     foreach ($w in $warnings) { Write-Host "WARNING - $w" -ForegroundColor Yellow }
 }
 
-if ($rc -eq 0 -or $rc -eq 3010) {
+if ($rc -eq 0 -or $rc -eq 3010 -or $convRestart) {
     if ($Restart) {
         ""
         Write-Host 'Restarting in 15 seconds to finish the removal. Press Ctrl+C to cancel.' -ForegroundColor Yellow
