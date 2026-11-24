@@ -67,7 +67,7 @@ the script over and run it with `powershell.exe -ExecutionPolicy Bypass -File .\
 `Invoke-ArcMigrationPrep.ps1` is a Datto RMM component (Script, PowerShell, Windows) that does
 Step 1 and the MT-001 fix ahead of time and automates Step 3. Paste it into the component; attach
 the three scripts below as an optional fallback for when GitHub can't be reached. Run it on each
-VM to be migrated while it is still on VMware. It never restarts or shuts the VM down.
+VM to be migrated while it is still on VMware. The component itself never restarts the VM.
 
 1. Saves `Save-PreMigrationConfig.ps1`, `Remove-VMwareTools.ps1` and
    `Invoke-ArcMigrationBootTask.ps1` to `C:\ProgramData\Arc\Migration\` (from `usrBranch`).
@@ -83,17 +83,17 @@ VM to be migrated while it is still on VMware. It never restarts or shuts the VM
      With two VMware Tools products (MT-010) it removes the newest, and the next startup removes
      the next. When nothing VMware is left the task unregisters itself. A startup that removes
      nothing counts as a failed attempt; after 3 the task unregisters itself and Step 7 is
-     finished by hand (MT-009, MT-004).
+     finished by hand (MT-009, MT-004). A failed attempt does not restart the VM.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `usrBranch` | `main` | Git branch the scripts are fetched from |
-| `usrRebootMode` | `Auto` | `Auto`: no restart on the first Hyper-V startup (Instant Recovery, MT-005), restart on later startups after a removal. `Always`: restart after every removal (VM restored straight to production storage). `Never`: the engineer restarts |
 | `usrCancel` | `false` | Migration called off: removes the task only |
 
-With `Auto` the sequence matches the guide: the first startup on Hyper-V removes VMware Tools
-without restarting; the restart after Migrate to production (Step 8) finishes it, and with two
-products that startup removes the older one and restarts once more.
+After each removal the task shows a message to everyone signed in (`msg.exe`, 30 seconds),
+then restarts the VM 30 seconds later. This happens on the first Hyper-V startup too, while
+Veeam is still running the VM from Instant Recovery; a restart there can be slow (MT-005).
+With two products, each startup removes one and restarts, so expect two restarts.
 
 Log: `C:\ProgramData\Arc\Migration\boot-task.log`, plus the full output of each removal in
 `Remove-VMwareTools-<time>.txt`.
