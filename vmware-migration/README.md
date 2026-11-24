@@ -62,6 +62,42 @@ the script over and run it with `powershell.exe -ExecutionPolicy Bypass -File .\
 
 4. Work through any warnings in the summary, then restart the VM if you didn't use `-Restart`.
 
+## Datto RMM: prepare in advance
+
+`Invoke-ArcMigrationPrep.ps1` is a Datto RMM component (Script, PowerShell, Windows) that does
+Step 1 and the MT-001 fix ahead of time and automates Step 3. Paste it into the component; attach
+the three scripts below as an optional fallback for when GitHub can't be reached. Run it on each
+VM to be migrated while it is still on VMware. It never restarts or shuts the VM down.
+
+1. Saves `Save-PreMigrationConfig.ps1`, `Remove-VMwareTools.ps1` and
+   `Invoke-ArcMigrationBootTask.ps1` to `C:\ProgramData\Arc\Migration\` (from `usrBranch`).
+2. Runs `Save-PreMigrationConfig.ps1`; stops if it fails.
+3. Applies the MT-001 fix. The first backup of each key is kept as
+   `<service>-StartOverride-backup.reg`, so the MT-001 rollback still restores the original
+   values; later backups get a timestamp.
+4. Registers the scheduled task `\Arc\VMware to Hyper-V migration` (SYSTEM, at startup, 3
+   minutes' delay) running `Invoke-ArcMigrationBootTask.ps1`:
+   - **on VMware**, deletes `StartOverride` again at every startup, because Windows writes it
+     back. After a restart on VMware, wait 3 minutes before the final backup;
+   - **on Hyper-V**, runs `Remove-VMwareTools.ps1` from the local copy (no network needed).
+     With two VMware Tools products (MT-010) it removes the newest, and the next startup removes
+     the next. When nothing VMware is left the task unregisters itself. A startup that removes
+     nothing counts as a failed attempt; after 3 the task unregisters itself and Step 7 is
+     finished by hand (MT-009, MT-004).
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `usrBranch` | `main` | Git branch the scripts are fetched from |
+| `usrRebootMode` | `Auto` | `Auto`: no restart on the first Hyper-V startup (Instant Recovery, MT-005), restart on later startups after a removal. `Always`: restart after every removal (VM restored straight to production storage). `Never`: the engineer restarts |
+| `usrCancel` | `false` | Migration called off: removes the task only |
+
+With `Auto` the sequence matches the guide: the first startup on Hyper-V removes VMware Tools
+without restarting; the restart after Migrate to production (Step 8) finishes it, and with two
+products that startup removes the older one and restarts once more.
+
+Log: `C:\ProgramData\Arc\Migration\boot-task.log`, plus the full output of each removal in
+`Remove-VMwareTools-<time>.txt`.
+
 ## Why VMware Tools needs a workaround on Hyper-V
 
 The VMware Tools uninstaller runs a hardware check (`VM_CheckRequirements`) that fails on any
@@ -110,6 +146,8 @@ All in `C:\ProgramData\Arc\Migration\` on the VM:
 | `<cached msi>-<time>.original` | `Remove-VMwareTools.ps1`, backup of the cached installer |
 | `VMwareTools-uninstall-<time>.log` | `Remove-VMwareTools.ps1`, msiexec verbose log |
 | `Converter-uninstall-<time>.log` | `Remove-VMwareTools.ps1`, msiexec verbose log for the Converter agent |
+| `vmbus/storvsc-StartOverride-backup*.reg` | `Invoke-ArcMigrationPrep.ps1` and the startup task, MT-001 backups |
+| `boot-task.log`, `boot-task-state.json`, `Remove-VMwareTools-<time>.txt` | `Invoke-ArcMigrationBootTask.ps1` |
 
 These files describe the customer's network. Keep them out of this repository.
 
