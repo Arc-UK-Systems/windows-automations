@@ -16,8 +16,8 @@
            - on VMware, deletes StartOverride again at every startup (Windows writes it back),
              so a restart between this run and the migration doesn't undo step 3;
            - on Hyper-V, removes VMware Tools (Step 7, MT-010 handled one product per startup),
-             restarts according to usrRebootMode, and unregisters itself when nothing VMware
-             is left.
+             shows a 30-second message to signed-in users and restarts the VM, and unregisters
+             itself when nothing VMware is left.
       It does not restart or shut the VM down.
 
     Component file attachments (optional - fallback only):
@@ -25,14 +25,6 @@
 
     Component input variables (all optional):
               usrBranch      String     default main   Git branch to fetch the scripts from
-              usrRebootMode  Selection  default Auto   Auto | Always | Never
-                             Auto   - no restart on the first Hyper-V startup (Veeam Instant
-                                      Recovery: a restart before Migrate to production can take
-                                      over an hour, MT-005); restarts on later startups when a
-                                      removal finished
-                             Always - restart after every removal (VM restored straight to
-                                      production storage, no Instant Recovery)
-                             Never  - the engineer restarts
               usrCancel      Boolean    default false  Migration called off: remove the
                                                        scheduled task only. Captures and
                                                        backups are kept.
@@ -60,12 +52,7 @@ function Get-DattoString([string]$Name, [string]$Default) {
     return $raw.Trim()
 }
 $Branch     = Get-DattoString 'usrBranch' 'main'
-$RebootMode = Get-DattoString 'usrRebootMode' 'Auto'
 $Cancel     = (Get-DattoString 'usrCancel' 'false') -match '^(true|1|yes)$'
-if ($RebootMode -notin 'Auto', 'Always', 'Never') {
-    Write-Output "FAILED - usrRebootMode '$RebootMode' is not Auto, Always or Never. Nothing changed."
-    exit 1
-}
 
 $RepoRawBase = 'https://raw.githubusercontent.com/Arc-UK-Systems/windows-automations'
 $dir      = 'C:\ProgramData\Arc\Migration'
@@ -165,7 +152,7 @@ try {
     Write-Output '=== 4. Startup task ==='
     $bootScript = Join-Path $dir 'Invoke-ArcMigrationBootTask.ps1'
     $action  = New-ScheduledTaskAction -Execute 'powershell.exe' `
-        -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$bootScript`" -RebootMode $RebootMode"
+        -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$bootScript`""
     $trigger = New-ScheduledTaskTrigger -AtStartup
     $trigger.Delay = 'PT3M'
     $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
@@ -175,14 +162,14 @@ try {
         -Principal $principal -Settings $settings -Description 'Arc VMware to Hyper-V migration: keeps the MT-001 fix on VMware; removes VMware Tools on Hyper-V, then removes itself.' -Force | Out-Null
     # A fresh prep starts the Hyper-V startup count and failed attempts from zero
     Remove-Item (Join-Path $dir 'boot-task-state.json') -Force -ErrorAction SilentlyContinue
-    Write-Output "Registered $TaskPath$TaskName (SYSTEM, at startup + 3 min, RebootMode $RebootMode)."
+    Write-Output "Registered $TaskPath$TaskName (SYSTEM, at startup + 3 min)."
 
     Write-Output ''
     Write-Output '=== Result ==='
     Write-Output 'PREPARED. Nothing was restarted.'
     Write-Output '- Copy pre-migration.txt (output above) into the migration ticket.'
     Write-Output '- If the VM restarts on VMware before the final backup, wait 3 minutes after startup so the task removes StartOverride again.'
-    Write-Output '- On Hyper-V, VMware Tools is removed 3 minutes after the first startup. Log: C:\ProgramData\Arc\Migration\boot-task.log'
+    Write-Output '- On Hyper-V, VMware Tools is removed 3 minutes after the first startup, then the VM restarts after a 30-second on-screen warning. Log: C:\ProgramData\Arc\Migration\boot-task.log'
     exit 0
 }
 catch {

@@ -21,13 +21,9 @@
       - Two or more (MT-010): removes the newest only. The task stays, and the next startup
         removes the next one.
       - When nothing VMware is left, the task unregisters itself.
-    Restart after a removal depends on -RebootMode:
-      Auto    No restart on the first Hyper-V startup (normally Veeam Instant Recovery, where a
-              restart before Migrate to production can take over an hour - MT-005). On later
-              startups, restarts when a removal finished.
-      Always  Restarts after every removal, first startup included. Use when the VM is restored
-              straight to production storage, not run from Instant Recovery.
-      Never   Never restarts; the engineer restarts.
+    After every removal that removed something, it shows a message to everyone signed in
+    (msg.exe, 30 seconds) and restarts the VM 30 seconds later. This includes the first startup
+    in Veeam Instant Recovery, where a restart can be slow (MT-005).
     A run that removes nothing counts as a failed attempt. After -MaxAttempts failed attempts
     the task unregisters itself so a broken uninstall can't repeat at every startup; follow
     MT-009 / MT-004 by hand from there.
@@ -39,8 +35,8 @@
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('Auto', 'Always', 'Never')][string]$RebootMode = 'Auto',
-    [ValidateRange(1, 10)][int]$MaxAttempts = 3
+    [ValidateRange(1, 10)][int]$MaxAttempts = 3,
+    [ValidateRange(0, 600)][int]$RestartDelaySeconds = 30
 )
 
 $ErrorActionPreference = 'Stop'
@@ -122,7 +118,7 @@ function Invoke-Remover([string[]]$ExtraArgs) {
 
 try {
     $cs = Get-CimInstance Win32_ComputerSystem
-    Write-Log "Invoke-ArcMigrationBootTask.ps1 v$ScriptVersion - $env:COMPUTERNAME - $($cs.Manufacturer) / $($cs.Model) - RebootMode $RebootMode"
+    Write-Log "Invoke-ArcMigrationBootTask.ps1 v$ScriptVersion - $env:COMPUTERNAME - $($cs.Manufacturer) / $($cs.Model)"
 
     # ================= Still on VMware: keep the MT-001 fix in place =================
     if ($cs.Manufacturer -like 'VMware*') {
@@ -201,19 +197,18 @@ try {
         Write-Log "Still registered: $($left -join '; '). The task stays and removes the next one at the next startup."
     }
 
-    $doRestart = switch ($RebootMode) {
-        'Always' { $true }
-        'Never'  { $false }
-        default  { $state.HyperVBoots -gt 1 }
-    }
-    if ($doRestart) {
-        Write-Log 'Restarting in 60 seconds to finish the removal.'
-        & shutdown.exe /r /t 60 /d p:4:2 /c 'Arc migration: restarting to finish removing VMware Tools.' | Out-Null
-    } elseif ($RebootMode -eq 'Auto') {
-        Write-Log 'First Hyper-V startup: not restarting (MT-005). Restart after Migrate to production has finished.'
-    } else {
-        Write-Log 'RebootMode Never: restart the VM when convenient to finish the removal.'
-    }
+    # Tell whoever is signed in, then restart. msg.exe doesn't wait, so the message shows for
+    # the same 30 seconds the restart is delayed by. Missing msg.exe (Server Core) is not fatal.
+    $note = if ($after.Tools.Count -or $after.Converter.Count) { 'One more VMware product will be removed after this restart.' }
+            else { 'Check C:\ProgramData\Arc\Migration\boot-task.log after the restart.' }
+    $text = "Arc migration: VMware Tools has been removed from $env:COMPUTERNAME. This VM restarts in $RestartDelaySeconds seconds. $note"
+    $msg = Join-Path $env:SystemRoot 'System32\msg.exe'
+    if (Test-Path $msg) {
+        try { & $msg '*' "/TIME:$RestartDelaySeconds" $text 2>&1 | Out-Null; Write-Log 'Message shown to signed-in users.' }
+        catch { Write-Log "Could not show the message: $($_.Exception.Message)" }
+    } else { Write-Log 'msg.exe not found - no on-screen message.' }
+    Write-Log "Restarting in $RestartDelaySeconds seconds to finish the removal."
+    & shutdown.exe /r /t $RestartDelaySeconds /d p:4:2 /c 'Arc migration: restarting to finish removing VMware Tools.' | Out-Null
     exit 0
 }
 catch {
