@@ -109,15 +109,17 @@ other hypervisor, so a normal uninstall on Hyper-V rolls back with error 1603 (B
    copy by hash;
 2. disables only the VMware-only steps in the cached installer by setting their condition to `0`:
    `VM_CheckRequirements`, `VM_LogStart`, `VM_UninstGHIRestGuestHandle`;
-3. runs the normal silent uninstall (`msiexec /x <product code> /qn /norestart`) with a verbose
+3. ends the process of every running VMware service with `taskkill /F` (never a shared
+   `svchost`), so the uninstall doesn't hang waiting to stop them (MT-004);
+4. runs the normal silent uninstall (`msiexec /x <product code> /qn /norestart`) with a verbose
    log in `C:\ProgramData\Arc\Migration\`;
-4. if the uninstall fails, puts the original cached installer back;
-5. uninstalls the VMware vCenter Converter Standalone agent if it is installed. It is left over
+5. if the uninstall fails, puts the original cached installer back;
+6. uninstalls the VMware vCenter Converter Standalone agent if it is installed. It is left over
    from converting the server, has no use on Hyper-V and runs as a LocalSystem service listening
    on the network. Its uninstall is an ordinary one, logged to `Converter-uninstall-<time>.log`.
 
-`-Inspect` shows the cached installer, the steps that would be disabled and whether the Converter
-agent would be uninstalled, then stops without
+`-Inspect` shows the cached installer, the steps that would be disabled, the VMware service
+processes that would be ended and whether the Converter agent would be uninstalled, then stops without
 changing anything.
 
 ## Post-migration checks

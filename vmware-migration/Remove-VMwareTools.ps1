@@ -2,7 +2,7 @@
 .SYNOPSIS
   After migration: removes VMware Tools from a Windows VM now running on Hyper-V,
   and checks the VM against its pre-migration capture.
-  Arc Systems - VMware to Hyper-V migrations. Version 2.1.0
+  Arc Systems - VMware to Hyper-V migrations. Version 2.2.0
 
 .DESCRIPTION
   Refuses to run unless the VM is on Hyper-V.
@@ -25,6 +25,9 @@
   v2.1: also uninstalls the VMware vCenter Converter Standalone agent if it is installed. It is
   left over from converting the server, has no use on Hyper-V, and runs as a network-listening
   LocalSystem service. Its uninstall is an ordinary one, so the installer is not changed.
+  v2.2: before the uninstall, ends the process of every running VMware service with
+  taskkill /F (never a shared svchost), so the uninstall doesn't hang stopping them (MT-004).
+  -Inspect lists them instead.
   Then reports, without changing anything: VMware entries and services remaining,
   Hyper-V integration services, network adapters compared with the pre-migration
   capture, offline disks, missing drive letters and old VMware network devices.
@@ -140,6 +143,28 @@ $converter = @(Get-ItemProperty $keys -ErrorAction SilentlyContinue | Where-Obje
 function Get-ConverterNote {
     if ($converter.Count) { ($converter | ForEach-Object { "$($_.DisplayName) $($_.DisplayVersion) $($_.PSChildName)" }) -join '; ' }
 }
+
+# v2.2: ends (taskkill /F) the process of every running VMware service: display name containing
+# VMware, or binary under a \VMware\ folder. A process shared with other services (svchost) is
+# never ended. -ListOnly shows what would be ended and changes nothing.
+function Stop-VMwareServiceProcess([switch]$ListOnly) {
+    $svc = @(Get-CimInstance Win32_Service | Where-Object {
+        $_.ProcessId -gt 0 -and ($_.DisplayName -like '*VMware*' -or $_.PathName -like '*\VMware\*') })
+    if (-not $svc.Count) { 'None running.'; return }
+    foreach ($procId in @($svc | ForEach-Object ProcessId | Sort-Object -Unique)) {
+        $names = (@($svc | Where-Object ProcessId -eq $procId | ForEach-Object Name)) -join ', '
+        $exe = (Get-Process -Id $procId -ErrorAction SilentlyContinue).ProcessName
+        if (-not $exe) { "PID $procId ($names) has already exited."; continue }
+        if ($exe -eq 'svchost') { "Skipped PID $procId $exe ($names): shared service host."; continue }
+        if ($ListOnly) { "Would end PID $procId $exe ($names)"; continue }
+        $out = & taskkill.exe /F /PID $procId 2>&1
+        if ($LASTEXITCODE -eq 0) { "Ended PID $procId $exe ($names)" }
+        else {
+            "Could not end PID $procId $exe ($names): $out"
+            $script:warnings += "Could not end VMware service process $exe (PID $procId, $names) before the uninstall."
+        }
+    }
+}
 if ($ProductCode) {
     $all = $entries
     $entries = @($all | Where-Object { $_.PSChildName -eq $ProductCode })
@@ -193,6 +218,9 @@ else {
         if ($toDisable.Count) { "Inspect only: $($toDisable.Count) step(s) above would be disabled (condition set to 0). Nothing changed." }
         else { "Inspect only: no VMware-only steps need disabling. Nothing changed." }
         if ($converter.Count) { "Inspect only: would also uninstall $(Get-ConverterNote)." }
+        ""
+        "=== VMware service processes that would be ended before the uninstall ==="
+        Stop-VMwareServiceProcess -ListOnly
         exit 0
     }
 
@@ -221,6 +249,12 @@ else {
     }
     [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($installer); $installer = $null
     [GC]::Collect(); [GC]::WaitForPendingFinalizers()
+
+    # v2.2: end the VMware service processes first, so the uninstall doesn't wait on them (MT-004)
+    ""
+    "=== Ending VMware service processes ==="
+    Stop-VMwareServiceProcess
+    ""
 
     $log = Join-Path $outDir "VMwareTools-uninstall-$stamp.log"
     "Uninstalling silently. Log: $log"
@@ -254,6 +288,9 @@ if ($converter.Count -and $Inspect) {
 }
 elseif ($converter.Count) {
     if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
+    ""
+    "=== Ending VMware service processes (Converter agent) ==="
+    Stop-VMwareServiceProcess
     foreach ($c in $converter) {
         ""
         "Found $($c.DisplayName) $($c.DisplayVersion), product code $($c.PSChildName)"
